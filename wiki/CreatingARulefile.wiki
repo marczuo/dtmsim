@@ -1,0 +1,52 @@
+#summary A short guide to creating a Turing machine rule file for the dtmsim tool.
+#labels Phase-Deploy
+
+= Introduction =
+
+dtmsim uses a transition table, known as a Rulefile, to represent a Turing machine. This is specified as the first command line argument.
+
+= Rulefile Format =
+
+== Line 1 ==
+
+ q n C1 C2 ... Cn
+
+ * q is the number of states of the Turing machine.
+ * n is the number of accepting states, n <= q.
+ * C1 C2 ... Cn is a list of all accepting states. Note that states start with 0, so 0 <= Ci < q.
+
+=== Example ===
+
+ 4 2 2 3
+
+This means that the Turing machine has 4 states (0, 1, 2, 3), 2 accepting states, and the accepting states are 2 and 3.
+
+== Line 2 ==
+
+ r
+
+ * r is a single integer representing the number of transition rules.
+
+=== Example ===
+
+ 5
+
+This means that the Turing machine has 5 transition rules.
+
+== Line 3 to (r+2) ==
+
+These are r lines, each line representing a single transition rule. Each rule looks like this:
+
+ a b c d e
+
+ * a is the state for which this rule applies.
+ * b is the tape symbol for which this rule applies.
+ * c is the new state the TM should go to.
+ * d is the tape symbol the TM writes on this square.
+ * e is either L or R, representing move Left or Right, respectively.
+
+=== Example ===
+
+ 0 0 1 B R
+
+This means that if the Turing machine is in state 0, and the scanned square reads '0' (note that this is a character, not an integer), then the Turing machine writes a blank symbol in this square, goes to state 1, and moves right.
