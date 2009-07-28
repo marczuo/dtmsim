@@ -41,15 +41,27 @@ int main(int argc, char** argv)
 	foutput = fopen(argv[1], "w");
 	if(foutput == NULL) nofiledie(argv[1]);
 
-	printf("How many states are in the Turing machine? ");
-	scanf("%d", &nstates);
-	printf("How many accepting states are in the Turing machine? ");
-	scanf("%d", &naccp);
+	while(1)
+	{
+		printf("How many states are in the Turing machine? ");
+		scanf("%d", &nstates);
+		if(nstates > 0) break;
+		printf("Number of states has to be at least 1.\n");
+	}
+
+	while(1)
+	{
+		printf("How many accepting states are in the Turing machine? ");
+		scanf("%d", &naccp);
+		if(naccp >= 0) break;
+		printf("Number of states has to be at least 0.\n");
+	}
+
 	fprintf(foutput, "%d %d", nstates, naccp);
 
 	for(i=1; i<=naccp; ++i)
 	{
-		printf("Accepting state #%d: ");
+		printf("Accepting state #%d: ", i);
 		scanf("%d", &intbuf);
 		if(intbuf < 0 || intbuf > nstates)
 		{

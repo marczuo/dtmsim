@@ -177,10 +177,10 @@ int main(int argc, char** argv)
 	for(i=1; i<=nrules; ++i)
 	{
 		fscanf(frule, "%d", &rules[i].forstate);
-		if(rules[i].forstate > nstates || rules[i].forstate < 0) invalidstatedie(filename, i, rules[i].forstate, nstates);
+		if(rules[i].forstate >= nstates || rules[i].forstate < 0) invalidstatedie(filename, i, rules[i].forstate, nstates-1);
 		fscanf(frule, "%s", &buffer); rules[i].fortape = buffer[0];
 		fscanf(frule, "%d", &rules[i].tostate);
-		if(rules[i].tostate > nstates || rules[i].tostate < 0) invalidstatedie(filename, i, rules[i].tostate, nstates);
+		if(rules[i].tostate >= nstates || rules[i].tostate < 0) invalidstatedie(filename, i, rules[i].tostate, nstates-1);
 		fscanf(frule, "%s", &buffer); rules[i].totape = buffer[0];
 		fscanf(frule, "%s", &buffer); charbuf = buffer[0];
 		if(charbuf == 'L') rules[i].direction = LEFT;
