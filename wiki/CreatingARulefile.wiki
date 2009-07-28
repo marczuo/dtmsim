@@ -1,6 +1,14 @@
 #summary A short guide to creating a Turing machine rule file for the dtmsim tool.
 #labels Phase-Deploy
 
+= Before You Read This =
+
+There is a program to generate rulefile now. Use rulemkr [filename], and follow the guidelines.
+
+Compile rulemkr with the following code:
+
+ make rulemkr
+
 = Introduction =
 
 dtmsim uses a transition table, known as a Rulefile, to represent a Turing machine. This is specified as the first command line argument.
