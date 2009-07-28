@@ -45,8 +45,12 @@ These are r lines, each line representing a single transition rule. Each rule lo
  * d is the tape symbol the TM writes on this square.
  * e is either L or R, representing move Left or Right, respectively.
 
+=== Note ===
+
+ * "_" (underscore) represents a blank symbol. An input tape cannot contain this character. But a single "_", representing a blank tape, is permitted.
+
 === Example ===
 
- 0 0 1 B R
+ 0 0 1 _ R
 
 This means that if the Turing machine is in state 0, and the scanned square reads '0' (note that this is a character, not an integer), then the Turing machine writes a blank symbol in this square, goes to state 1, and moves right.
