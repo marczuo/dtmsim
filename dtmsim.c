@@ -106,7 +106,7 @@ void printhelp()
 	printf("\t\t-s: Step by step mode (Useful for instruction).\n");
 	printf("\t\t-o filename: Save output to a file.\n\n");
 	printf("\trulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
-	printf("\tinput_tape: The input tape. This should not include the character \'_\', which is used for blank symbol.\n");
+	printf("\tinput_tape: The input tape. Note that \'_\' (underscore) is used as the blank symbol.\n");
 	printf("\nNote: If the input tape is intended to be blank, use a single character \'_\'.\n");
 	exit(0);
 }
@@ -192,16 +192,8 @@ int main(int argc, char** argv)
 		}
 	}
 
-	for(i=0; i<strlen(inputtape); ++i)
-	{
-		if(inputtape[i] == BLANK && strlen(inputtape) != 1)
-		{
-			printf("Error: Character %d of the input tape is a blank symbol.\n", i+1);
-			exit(1);
-		}
-		tape[TSTART+i] = inputtape[i];
-	}
-
+	for(i=0; i<strlen(inputtape); ++i) tape[TSTART+i] = inputtape[i];
+	
 	leftmost = TSTART;
 	rightmost = TSTART + strlen(inputtape) - 1;
 	if(sbys)
