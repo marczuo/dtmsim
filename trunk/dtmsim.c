@@ -100,6 +100,8 @@ void badargdie()
 
 void printhelp()
 {
+	printf("Deterministic Turing Machine SIMulator - Copyright (C) 2009 Zee Zuo\n");
+	printf("Licensed under GNU General Public License v3\n\n");
 	printf("Usage: dtmsim [options] rulefile input_tape\n\n");
 	printf("\tOptions:\n");
 	printf("\t\t-h: Display this help message.\n");
