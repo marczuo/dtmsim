@@ -35,7 +35,7 @@ struct Rule
 };
 
 int nrules;
-struct Rule rules[1001];
+struct Rule rules[10001];
 char tape[10001];
 
 int sbys;
@@ -63,7 +63,7 @@ int runTM(int head, int state)
 		if(head>rightmost) rightmost = head;
 		if(sbys)
 		{
-			printf("\nFor state %d and tape symbol %c, write %c, go to state %d, and move to ",
+			printf("\nFor state %d and tape symbol %c, write %c, go to state %d, and move ",
 				state, thb, rules[i].totape, rules[i].tostate);
 			if(nh > head) printf("right"); else printf("left"); printf(".\n");
 			if(nh != leftmost) for(j=1; j<=(nh-leftmost)*2; ++j) printf(" ");
@@ -86,9 +86,15 @@ void unknowndie()
 	exit(1);
 }
 
-void nofiledie()
+void nofiledie(char* filename)
 {
-	printf("Cannot find specified file.\n");
+	printf("Cannot find specified file: %s.\n", filename);
+	exit(1);
+}
+
+void badargdie()
+{
+	printf("Too few arguments. Type dtmsim -h for help.\n");
 	exit(1);
 }
 
@@ -98,6 +104,13 @@ void printhelp()
 	printf("rulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
 	printf("input_tape: The input tape. This should not include the character \'B\', which is used for blank symbol.");
 	exit(0);
+}
+
+void invalidstatedie(char* filename, int nthrule, int wrongstate, int correctmaxstate)
+{
+	printf("In input file %s: \n", filename);
+	printf("\tRule #%d: %d is not a valid state; should be between 0 and %d.\n", nthrule, wrongstate, correctmaxstate);
+	exit(1);
 }
 
 int main(int argc, char** argv)
@@ -113,8 +126,9 @@ int main(int argc, char** argv)
 	for(i=1; i<=10000; ++i) tape[i] = BLANK;
 
 	if((!strcmp(argv[1], "-h"))||(!strcmp(argv[1], "--help"))) printhelp();
+	if(argc < 2) badargdie();
 	frule = fopen(argv[1], "r");
-	if(frule == NULL) nofiledie();
+	if(frule == NULL) nofiledie(argv[1]);
 	
 	sbys = 0;
 	if(argc >= 4) for(i=3; i<argc; ++i)
@@ -129,8 +143,10 @@ int main(int argc, char** argv)
 	for(i=1; i<=nrules; ++i)
 	{
 		fscanf(frule, "%d", &rules[i].forstate);
+		if(rules[i].forstate > nstates || rules[i].forstate < 0) invalidstatedie(argv[1], i, rules[i].forstate, nstates);
 		fscanf(frule, "%s", &buffer); rules[i].fortape = buffer[0];
 		fscanf(frule, "%d", &rules[i].tostate);
+		if(rules[i].tostate > nstates || rules[i].tostate < 0) invalidstatedie(argv[1], i, rules[i].tostate, nstates);
 		fscanf(frule, "%s", &buffer); rules[i].totape = buffer[0];
 		fscanf(frule, "%s", &buffer); charbuf = buffer[0];
 		if(charbuf == 'L') rules[i].direction = LEFT;
@@ -139,6 +155,11 @@ int main(int argc, char** argv)
 
 	for(i=0; i<strlen(argv[2]); ++i)
 	{
+		if(argv[2][i] == 'B')
+		{
+			printf("Error: Character %d of the input tape is a blank symbol.\n", i+1);
+			exit(1);
+		}
 		tape[TSTART+i] = argv[2][i];
 	}
 
@@ -159,8 +180,11 @@ int main(int argc, char** argv)
 		if(tape[i] != BLANK) printf("%c ", tape[i]);
 	}
 	printf("\n");
-	for(i=1; i<=naccp; ++i) if(finalstate == accp[i]) { printf("Turing machine died accepting the input tape (%d).\n", finalstate); exit(0); }
-	printf("Turing machine died NOT accepting the state (%d).\n", finalstate);
+	for(i=1; i<=naccp; ++i) 
+		if(finalstate == accp[i])
+			printf("Turing machine died accepting the input tape (%d).\n", finalstate); 
+		else
+			printf("Turing machine died NOT accepting the state (%d).\n", finalstate);
 
 	return 0;
 }
