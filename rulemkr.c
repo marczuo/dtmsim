@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void nofiledie(char* filename)
 {
@@ -36,10 +37,14 @@ int main(int argc, char** argv)
 	int i, nstates, naccp, intbuf, nrules;
 	char strbuf[10001];
 	char charbuf;
+	char* filename = malloc(10000);
 
 	if(argc != 2) badargdie();
-	foutput = fopen(argv[1], "w");
-	if(foutput == NULL) nofiledie(argv[1]);
+	strcpy(filename, argv[1]);
+	if(strstr(filename, ".rule") == NULL || strcmp(strstr(filename, ".rule"), ".rule"))
+		filename = strcat(filename, ".rule");
+	foutput = fopen(filename, "w");
+	if(foutput == NULL) nofiledie(filename);
 
 	while(1)
 	{
@@ -63,7 +68,7 @@ int main(int argc, char** argv)
 	{
 		printf("Accepting state #%d: ", i);
 		scanf("%d", &intbuf);
-		if(intbuf < 0 || intbuf > nstates)
+		if(intbuf < 0 || intbuf > nstates - 1)
 		{
 			printf("State has to be between 0 and %d.\n", nstates - 1);
 			i--; continue;
@@ -81,7 +86,7 @@ int main(int argc, char** argv)
 		while(1)
 		{
 			printf("\tFor state: "); scanf("%d", &intbuf);
-			if(intbuf < 0 || intbuf > nstates)
+			if(intbuf < 0 || intbuf > nstates - 1)
 			{
 				printf("\tState has to be between 0 and %d.\n", nstates - 1);
 				continue;	
@@ -94,7 +99,7 @@ int main(int argc, char** argv)
 		while(1)
 		{
 			printf("\tChange to state: "); scanf("%d", &intbuf);
-			if(intbuf < 0 || intbuf > nstates)
+			if(intbuf < 0 || intbuf > nstates - 1)
 			{
 				printf("\tState has to be between 0 and %d.\n", nstates - 1);
 				continue;
@@ -117,5 +122,8 @@ int main(int argc, char** argv)
 		fprintf(foutput, "\n");
 	}
 
-	printf("Successfully generated rulefile: %s\n", argv[1]);
+	printf("Successfully generated rulefile: %s\n", filename);
+	free(filename);
+
+	return 0;
 }
