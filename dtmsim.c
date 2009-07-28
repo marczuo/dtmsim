@@ -59,8 +59,8 @@ int runTM(int head, int state)
 		thb = tape[head];
 		tape[head] = rules[i].totape;
 		nh = head + rules[i].direction;
-		if(head<leftmost) leftmost = head;
-		if(head>rightmost) rightmost = head;
+		if(nh<leftmost) leftmost = nh;
+		if(nh>rightmost) rightmost = nh;
 		if(sbys)
 		{
 			printf("\nFor state %d and tape symbol %c, write %c, go to state %d, and move ",
