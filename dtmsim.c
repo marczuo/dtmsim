@@ -23,7 +23,7 @@
 #define LEFT -1
 #define RIGHT 1
 #define TSTART 5000
-#define BLANK 'B'
+#define BLANK '_'
 
 struct Rule
 {
@@ -94,15 +94,20 @@ void nofiledie(char* filename)
 
 void badargdie()
 {
-	printf("Too few arguments. Type dtmsim -h for help.\n");
+	printf("Invalid arguments. Type dtmsim -h for help.\n");
 	exit(1);
 }
 
 void printhelp()
 {
-	printf("Usage: dtmsim [rulefile] [input_tape]\n\n");
-	printf("rulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
-	printf("input_tape: The input tape. This should not include the character \'B\', which is used for blank symbol.");
+	printf("Usage: dtmsim [options] rulefile input_tape\n\n");
+	printf("\tOptions:\n");
+	printf("\t\t-h: Display this help message.\n");
+	printf("\t\t-s: Step by step mode (Useful for instruction).\n");
+	printf("\t\t-o filename: Save output to a file.\n\n");
+	printf("\trulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
+	printf("\tinput_tape: The input tape. This should not include the character \'_\', which is used for blank symbol.\n");
+	printf("\nNote: If the input tape is intended to be blank, use a single character \'_\'.\n");
 	exit(0);
 }
 
@@ -113,29 +118,58 @@ void invalidstatedie(char* filename, int nthrule, int wrongstate, int correctmax
 	exit(1);
 }
 
+int eq(char* left, char* right)
+{
+	return !strcmp(left, right);
+}
+
 int main(int argc, char** argv)
 {
 	FILE* frule;
 	int intbuf, i;
 	char charbuf;
-	int nstates, naccp, ntlen;
+	int nstates, naccp;
 	int accp[10001];
 	int finalstate;
 	char buffer[1001];
+	char* filename, *inputtape, *outputfile = malloc(10001);
+	FILE* foutput;
+	int writeoutit = 0, gotfilename = 0, gotinputtape= 0;
 
 	for(i=1; i<=10000; ++i) tape[i] = BLANK;
-
-	if((!strcmp(argv[1], "-h"))||(!strcmp(argv[1], "--help"))) printhelp();
-	if(argc < 2) badargdie();
-	frule = fopen(argv[1], "r");
-	if(frule == NULL) nofiledie(argv[1]);
-	
 	sbys = 0;
-	if(argc >= 4) for(i=3; i<argc; ++i)
+		
+	for(i=1; i<argc; ++i)
 	{
-		if(!strcmp(argv[i], "-s")) sbys = 1;
+		if(eq(argv[i], "-h") || eq(argv[i], "--help")) printhelp();
+		else if(eq(argv[i], "-s")) sbys = 1;
+		else if(eq(argv[i], "-o"))
+		{
+			if(i == argc-1) badargdie();
+			strcpy(outputfile, argv[++i]);
+			if(strstr(outputfile, ".tape") == NULL || !eq(strstr(outputfile, ".tape"), ".tape")) 
+				outputfile = strcat(outputfile, ".tape");
+			writeoutit = 1;
+		}
+		
+		else if(!gotfilename)
+		{
+			gotfilename = 1;
+			filename = argv[i];
+		}
+		else if(!gotinputtape)
+		{
+			gotinputtape = 1;
+			inputtape = argv[i];
+		}
+		else badargdie();
 	}
 
+	if(!gotinputtape) badargdie();
+
+	frule = fopen(filename, "r");
+	if(frule == NULL) nofiledie(filename);
+	
 	fscanf(frule, "%d %d", &nstates, &naccp);
 	for(i=1; i<=naccp; ++i) fscanf(frule, "%d", accp+i);
 	
@@ -143,28 +177,33 @@ int main(int argc, char** argv)
 	for(i=1; i<=nrules; ++i)
 	{
 		fscanf(frule, "%d", &rules[i].forstate);
-		if(rules[i].forstate > nstates || rules[i].forstate < 0) invalidstatedie(argv[1], i, rules[i].forstate, nstates);
+		if(rules[i].forstate > nstates || rules[i].forstate < 0) invalidstatedie(filename, i, rules[i].forstate, nstates);
 		fscanf(frule, "%s", &buffer); rules[i].fortape = buffer[0];
 		fscanf(frule, "%d", &rules[i].tostate);
-		if(rules[i].tostate > nstates || rules[i].tostate < 0) invalidstatedie(argv[1], i, rules[i].tostate, nstates);
+		if(rules[i].tostate > nstates || rules[i].tostate < 0) invalidstatedie(filename, i, rules[i].tostate, nstates);
 		fscanf(frule, "%s", &buffer); rules[i].totape = buffer[0];
 		fscanf(frule, "%s", &buffer); charbuf = buffer[0];
 		if(charbuf == 'L') rules[i].direction = LEFT;
-		else rules[i].direction = RIGHT;
+		else if(charbuf == 'R') rules[i].direction = RIGHT;
+		else
+		{
+			printf("In input file %s:\n", filename);
+			printf("\tRule #%d: %s is not a legal option; must be either L or R.\n", i, buffer);
+		}
 	}
 
-	for(i=0; i<strlen(argv[2]); ++i)
+	for(i=0; i<strlen(inputtape); ++i)
 	{
-		if(argv[2][i] == 'B')
+		if(inputtape[i] == BLANK && strlen(inputtape) != 1)
 		{
 			printf("Error: Character %d of the input tape is a blank symbol.\n", i+1);
 			exit(1);
 		}
-		tape[TSTART+i] = argv[2][i];
+		tape[TSTART+i] = inputtape[i];
 	}
 
 	leftmost = TSTART;
-	rightmost = TSTART + strlen(argv[2]) - 1;
+	rightmost = TSTART + strlen(inputtape) - 1;
 	if(sbys)
 	{
 		printf("Start in state 0 and tape symbol %c.\n", tape[TSTART]);
@@ -175,16 +214,23 @@ int main(int argc, char** argv)
 
 	finalstate = runTM(TSTART, 0);
 	printf("Final tape (omitting blank squares):\n");
-	for(i=1; i<=10000; ++i)
-	{
-		if(tape[i] != BLANK) printf("%c ", tape[i]);
-	}
+	for(i=leftmost; i<=rightmost; ++i) printf("%c ", tape[i]);
 	printf("\n");
 	for(i=1; i<=naccp; ++i) 
 		if(finalstate == accp[i])
 			printf("Turing machine died accepting the input tape (%d).\n", finalstate); 
 		else
-			printf("Turing machine died NOT accepting the state (%d).\n", finalstate);
+			printf("Turing machine died NOT accepting the input tape (%d).\n", finalstate);
 
+	if(writeoutit)
+	{
+		foutput = fopen(outputfile, "w");
+
+		for(i=leftmost; i<=rightmost; ++i)
+			fprintf(foutput, "%c", tape[i]); 
+		
+		fprintf(foutput, "\n");
+	}
+		
 	return 0;
 }
