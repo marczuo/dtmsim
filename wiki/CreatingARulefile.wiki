@@ -55,7 +55,7 @@ These are r lines, each line representing a single transition rule. Each rule lo
 
 === Note ===
 
- * "`_`" (underscore) represents a blank symbol. An input tape cannot contain this character. But a single "`_`", representing a blank tape, is permitted.
+ * "`_`" (underscore) represents a blank symbol.
 
 === Example ===
 
