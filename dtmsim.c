@@ -210,9 +210,9 @@ int main(int argc, char** argv)
 	printf("\n");
 	for(i=1; i<=naccp; ++i) 
 		if(finalstate == accp[i])
-			printf("Turing machine died accepting the input tape (%d).\n", finalstate); 
+			printf("Turing machine halted accepting the input tape (%d).\n", finalstate); 
 		else
-			printf("Turing machine died NOT accepting the input tape (%d).\n", finalstate);
+			printf("Turing machine halted NOT accepting the input tape (%d).\n", finalstate);
 
 	if(writeoutit)
 	{
