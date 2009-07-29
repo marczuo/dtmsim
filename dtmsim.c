@@ -125,6 +125,8 @@ void printhelp()
 	printf("\trulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
 	printf("\tinput_tape: The input tape. Note that \'_\' (underscore) is used as the blank symbol.\n");
 	printf("\nNote: If the input tape is intended to be blank, use a single character \'_\'.\n");
+	printf("WARNING: IF YOU UPDATED FROM AN EARLY VERSION, MAKE SURE THAT YOU UPDATE THE RULEFILES AS WELL;\n");
+	printf("YOU MAY ALSO UPDATE THE RULEFILES YOURSELF BY SUBSTITUTING \'_\' (UNDERSCORE) FOR ALL \'B\'s.\n");
 	exit(0);
 }
 
