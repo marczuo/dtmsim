@@ -38,8 +38,11 @@ int nrules;
 struct Rule rules[10001];
 char tape[10001];
 
+/* Global Variables [glb] */
 int sbys;
 int leftmost, rightmost;
+FILE* foutput;
+int writeoutit;
 
 void pressenter()
 {
@@ -68,10 +71,22 @@ int runTM(int head, int state)
 			if(nh > head) printf("right"); else printf("left"); printf(".\n");
 			if(nh != leftmost) for(j=1; j<=(nh-leftmost)*2; ++j) printf(" ");
 			printf("H\n");
-			for(j=leftmost; j<=rightmost; ++j) printf("%c ", tape[j]);
+			for(j=leftmost; j<=rightmost; ++j)
+				printf("%c ", tape[j]);
 			printf("\n");
 			pressenter();
 			printf("\n");
+		}
+
+		if(writeoutit)
+		{
+			fprintf(foutput, "%d: ", rules[i].tostate);
+			for(j=leftmost; j<=rightmost; ++j)
+			{
+				if(j == nh) fprintf(foutput, "[%c]", tape[j]);
+				else fprintf(foutput, "%c", tape[j]);	
+			}
+			fprintf(foutput, "\n");
 		}
 
 		return runTM(nh, rules[i].tostate);
@@ -88,7 +103,7 @@ void unknowndie()
 
 void nofiledie(char* filename)
 {
-	printf("Cannot find specified file: %s.\n", filename);
+	printf("Cannot open specified file: %s.\n", filename);
 	exit(1);
 }
 
@@ -125,6 +140,8 @@ int eq(char* left, char* right)
 	return !strcmp(left, right);
 }
 
+/* New function zone [nfz] */
+
 int main(int argc, char** argv)
 {
 	FILE* frule;
@@ -132,12 +149,15 @@ int main(int argc, char** argv)
 	char charbuf;
 	int nstates, naccp;
 	int accp[10001];
+	int accpmrk[10001];
 	int finalstate;
 	char buffer[1001];
 	char* filename, *inputtape, *outputfile = malloc(10001);
-	FILE* foutput;
-	int writeoutit = 0, gotfilename = 0, gotinputtape= 0;
+	int gotfilename = 0, gotinputtape= 0;
+	/* New Variable Zone [nvz] */
+	writeoutit = 0;
 
+	memset(accpmrk, 0, sizeof(accpmrk));
 	for(i=1; i<=10000; ++i) tape[i] = BLANK;
 	sbys = 0;
 		
@@ -173,7 +193,30 @@ int main(int argc, char** argv)
 	if(frule == NULL) nofiledie(filename);
 	
 	fscanf(frule, "%d %d", &nstates, &naccp);
-	for(i=1; i<=naccp; ++i) fscanf(frule, "%d", accp+i);
+	if(nstates < 1)
+	{
+		printf("In input file %s:\n", filename);
+		printf("\tThe number of states %d must be at least 1.\n", nstates);
+		exit(1);
+	}
+	if(naccp < 0)
+	{
+		printf("In input file %s:\n", filename);
+		printf("\tThe number of accepting states %d must be at least 0.\n", naccp);
+		exit(1);
+	}
+
+	for(i=1; i<=naccp; ++i)
+	{
+		fscanf(frule, "%d", accp+i);
+		if(accpmrk[accp[i]])
+		{
+			printf("In input file %s:\n", filename);
+			printf("\tAccepting state %d (%d) is a duplicate state.\n", i, accp[i]);
+			exit(1);
+		}
+		accpmrk[accp[i]] = 1;	
+	}
 	
 	fscanf(frule, "%d", &nrules);
 	for(i=1; i<=nrules; ++i)
@@ -191,40 +234,55 @@ int main(int argc, char** argv)
 		{
 			printf("In input file %s:\n", filename);
 			printf("\tRule #%d: %s is not a legal option; must be either L or R.\n", i, buffer);
+			exit(1);
 		}
 	}
 
 	for(i=0; i<strlen(inputtape); ++i) tape[TSTART+i] = inputtape[i];
 	
+	if(writeoutit)
+	{
+		foutput = fopen(outputfile, "w");
+		if(foutput == NULL) nofiledie(outputfile);
+	}
+
 	leftmost = TSTART;
 	rightmost = TSTART + strlen(inputtape) - 1;
 	if(sbys)
 	{
 		printf("Start in state 0 and tape symbol %c.\n", tape[TSTART]);
 		printf("H\n");
-		for(i=leftmost; i<=rightmost; ++i) printf("%c ", tape[i]); printf("\n");
+		for(i=leftmost; i<=rightmost; ++i)
+			printf("%c ", tape[i]);
+		printf("\n");
 		pressenter();
+	}
+
+	if(writeoutit)
+	{
+		fprintf(foutput, "%d: ", 0);
+		fprintf(foutput, "[%c]", tape[leftmost]);
+		for(i=leftmost+1; i<=rightmost; ++i) fprintf(foutput, "%c", tape[i]);
+		fprintf(foutput, "\n");
 	}
 
 	finalstate = runTM(TSTART, 0);
 	printf("Final tape (omitting blank squares):\n");
-	for(i=leftmost; i<=rightmost; ++i) printf("%c ", tape[i]);
+	for(i=leftmost; i<=rightmost; ++i) 
+		printf("%c ", tape[i]);
 	printf("\n");
+
 	for(i=1; i<=naccp; ++i) 
 		if(finalstate == accp[i])
+		{
 			printf("Turing machine halted accepting the input tape (%d).\n", finalstate); 
+			if(writeoutit) fprintf(foutput, "ACCEPTED\n");
+		}
 		else
+		{
 			printf("Turing machine halted NOT accepting the input tape (%d).\n", finalstate);
+			if(writeoutit) fprintf(foutput, "NOT ACCEPTED\n");
+		}
 
-	if(writeoutit)
-	{
-		foutput = fopen(outputfile, "w");
-
-		for(i=leftmost; i<=rightmost; ++i)
-			fprintf(foutput, "%c", tape[i]); 
-		
-		fprintf(foutput, "\n");
-	}
-		
 	return 0;
 }
