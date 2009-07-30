@@ -43,7 +43,7 @@ int relhead;
 /* Global Variables [glb] */
 int sbys;
 FILE* foutput;
-int writeoutit;
+int writeitout;
 
 void relmem(struct ListNode* node)
 {
@@ -113,7 +113,7 @@ int runTM(int state)
 			pressenter();	
 		}
 
-		if(writeoutit)
+		if(writeitout)
 		{
 			fprintf(foutput, "%d: ", rules[i].tostate);
 
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 	char* filename, *inputtape, *outputfile = malloc(10001);
 	int gotfilename = 0, gotinputtape= 0;
 	/* New Variable Zone [nvz] */
-	writeoutit = 0;
+	writeitout = 0;
 
 	tapestart = malloc(sizeof(struct ListNode));
 	initNode(tapestart);
@@ -225,7 +225,7 @@ int main(int argc, char** argv)
 			strcpy(outputfile, argv[++i]);
 			if(strstr(outputfile, ".tape") == NULL || !eq(strstr(outputfile, ".tape"), ".tape")) 
 				outputfile = strcat(outputfile, ".tape");
-			writeoutit = 1;
+			writeitout = 1;
 		}
 		
 		else if(!gotfilename)
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
 	tapehead = tapestart;
 	relhead = 0;
 
-	if(writeoutit)
+	if(writeitout)
 	{
 		foutput = fopen(outputfile, "w");
 		if(foutput == NULL) nofiledie(outputfile);
@@ -329,7 +329,7 @@ int main(int argc, char** argv)
 
 	tapehead = tapestart;
 	
-	if(writeoutit)
+	if(writeitout)
 	{
 		fprintf(foutput, "%d: ", 0);
 
@@ -371,18 +371,18 @@ int main(int argc, char** argv)
 		if(finalstate == accp[i])
 		{
 			printf("Turing machine halted accepting the input tape (%d).\n", finalstate); 
-			if(writeoutit) fprintf(foutput, "ACCEPTED\n");
+			if(writeitout) fprintf(foutput, "ACCEPTED\n");
 		}
 		else
 		{
 			printf("Turing machine halted NOT accepting the input tape (%d).\n", finalstate);
-			if(writeoutit) fprintf(foutput, "NOT ACCEPTED\n");
+			if(writeitout) fprintf(foutput, "NOT ACCEPTED\n");
 		}
 
 	relmem(tapestart);
 	free(outputfile);
 	fclose(frule);
-	if(writeoutit) fclose(foutput);
+	if(writeitout) fclose(foutput);
 
 	return 0;
 }
