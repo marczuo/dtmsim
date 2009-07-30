@@ -380,6 +380,7 @@ int main(int argc, char** argv)
 		}
 
 	relmem(tapestart);
+	free(outputfile);
 	fclose(frule);
 	if(writeoutit) fclose(foutput);
 
