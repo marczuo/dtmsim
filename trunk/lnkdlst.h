@@ -2,9 +2,6 @@
 #define ZEE_LNKDLST
 
 #include <stdlib.h>
-#define BOOL int
-#define TRUE 1
-#define FALSE 0
 
 struct ListNode
 {
