@@ -42,7 +42,6 @@ int relhead;
 
 /* Global Variables [glb] */
 int sbys;
-int leftmost, rightmost;
 FILE* foutput;
 int writeoutit;
 
@@ -54,9 +53,11 @@ void relmem(struct ListNode* node)
 
 void pressenter()
 {
-	char buffer[10001];
+	//char buffer[10001];
 	printf("Press enter to continue.");
-	fgets(buffer, 10000, stdin);
+	while (getchar() != '\n')
+		;
+//	fgets(buffer, 10000, stdin);
 }
 
 int runTM(int state)
@@ -72,7 +73,7 @@ int runTM(int state)
 		tapehead->value = rules[i].totape;
 		nh = relhead + rules[i].direction;
 
-		if(nh < 0) // Oops, gone out left
+		if(nh < 0) /* Oops, gone out left */
 		{
 			nodbuf = (struct ListNode*)malloc(sizeof(struct ListNode));
 			initNode(nodbuf);
@@ -81,7 +82,7 @@ int runTM(int state)
 			tapestart = nodbuf;
 		}
 
-		if(nh > relhead && tapehead->next == NULL) // Oops, gone out right
+		if(nh > relhead && tapehead->next == NULL) /* Oops, gone out right */
 		{
 			nodbuf = (struct ListNode*)malloc(sizeof(struct ListNode));
 			initNode(nodbuf);
@@ -109,8 +110,7 @@ int runTM(int state)
 			}
 
 			printf("\n");
-			pressenter();
-			printf("\n");
+			pressenter();	
 		}
 
 		if(writeoutit)
