@@ -38,6 +38,7 @@ struct Rule
 int nrules;
 struct Rule rules[10001];
 struct ListNode* tapestart, *tapehead;
+	/* WARNING: PLEASE FREE ALL TAPE SQUARES!!!! */
 int relhead;
 
 /* Global Variables [glb] */
@@ -53,11 +54,10 @@ void relmem(struct ListNode* node)
 
 void pressenter()
 {
-	//char buffer[10001];
+	/* char buffer[10001]; */
 	printf("Press enter to continue.");
-	while (getchar() != '\n')
-		;
-//	fgets(buffer, 10000, stdin);
+	while (getchar() != '\n'); /* Courtesy of M. Sanders */
+	/* fgets(buffer, 10000, stdin); */
 }
 
 int runTM(int state)
@@ -140,23 +140,18 @@ int runTM(int state)
 	return state;
 }
 
-void unknowndie()
-{
-	printf("Unknown command: Type -h for help.\n");
-	exit(1);
-	relmem(tapestart);
-}
-
 void nofiledie(char* filename)
 {
 	printf("Cannot open specified file: %s.\n", filename);
+	printf("Try dtmsim --help for more information.\n");
 	exit(1);
 	relmem(tapestart);
 }
 
 void badargdie()
 {
-	printf("Invalid arguments. Type dtmsim -h for help.\n");
+	printf("Invalid arguments.\n");
+	printf("Try dtmsim --help for more information.\n");
 	exit(1);
 	relmem(tapestart);
 }
@@ -167,9 +162,9 @@ void printhelp()
 	printf("Licensed under GNU General Public License v3\n\n");
 	printf("Usage: dtmsim [options] rulefile input_tape\n\n");
 	printf("\tOptions:\n");
-	printf("\t\t-h: Display this help message.\n");
-	printf("\t\t-s: Step by step mode (Useful for instruction).\n");
-	printf("\t\t-o filename: Save output to a file.\n\n");
+	printf("\t\t--help or -h: Display this help message.\n");
+	printf("\t\t--step or -s: Step by step mode (Useful for instruction).\n");
+	printf("\t\t--output or -o filename: Save output to a file.\n\n");
 	printf("\trulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
 	printf("\tinput_tape: The input tape. Note that \'_\' (underscore) is used as the blank symbol.\n");
 	printf("\nNote: If the input tape is intended to be blank, use a single character \'_\'.\n");
@@ -182,6 +177,8 @@ void invalidstatedie(char* filename, int nthrule, int wrongstate, int correctmax
 {
 	printf("In input file %s: \n", filename);
 	printf("\tRule #%d: %d is not a valid state; should be between 0 and %d.\n", nthrule, wrongstate, correctmaxstate);
+	printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
+	printf("Alternatively, you may try rulemkr, an intuitive tool for writing a rulefile.\n");
 	exit(1);
 	relmem(tapestart);
 }
@@ -218,8 +215,8 @@ int main(int argc, char** argv)
 	for(i=1; i<argc; ++i)
 	{
 		if(eq(argv[i], "-h") || eq(argv[i], "--help")) printhelp();
-		else if(eq(argv[i], "-s")) sbys = 1;
-		else if(eq(argv[i], "-o"))
+		else if(eq(argv[i], "-s") || eq(argv[i], "--help")) sbys = 1;
+		else if(eq(argv[i], "-o") || eq(argv[i], "--output"))
 		{
 			if(i == argc-1) badargdie();
 			strcpy(outputfile, argv[++i]);
@@ -251,6 +248,7 @@ int main(int argc, char** argv)
 	{
 		printf("In input file %s:\n", filename);
 		printf("\tThe number of states %d must be at least 1.\n", nstates);
+		printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
 		exit(1);
 		relmem(tapestart);
 	}
@@ -258,6 +256,7 @@ int main(int argc, char** argv)
 	{
 		printf("In input file %s:\n", filename);
 		printf("\tThe number of accepting states %d must be at least 0.\n", naccp);
+		printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
 		exit(1);
 		relmem(tapestart);
 	}
@@ -269,6 +268,7 @@ int main(int argc, char** argv)
 		{
 			printf("In input file %s:\n", filename);
 			printf("\tAccepting state %d (%d) is a duplicate state.\n", i, accp[i]);
+			printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
 			exit(1);
 			relmem(tapestart);
 		}
@@ -291,6 +291,7 @@ int main(int argc, char** argv)
 		{
 			printf("In input file %s:\n", filename);
 			printf("\tRule #%d: %s is not a legal option; must be either L or R.\n", i, buffer);
+			printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
 			exit(1);
 			relmem(tapestart);
 		}
