@@ -1,8 +1,6 @@
 #ifndef ZEE_LNKDLST
 #define ZEE_LNKDLST
 
-#include <stdlib.h>
-
 struct ListNode
 {
 	char value;
