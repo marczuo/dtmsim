@@ -20,11 +20,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lnkdlst.h"
+
 #define DIRECTION int
 #define LEFT -1
 #define RIGHT 1
+
+#define BOOL int
+#define TRUE 1
+#define FALSE 0
+
 #define TSTART 5000
-#define BLANK '_'
+#define BLANK '_' /* L. Garron's suggestion */
 
 struct Rule
 {
@@ -42,12 +48,18 @@ struct ListNode* tapestart, *tapehead;
 int relhead;
 
 /* Global Variables [glb] */
-int sbys;
+BOOL sbys;
+#ifndef NDEBUG
+BOOL debug;
+#endif
 FILE* foutput;
-int writeitout;
+BOOL writeitout;
 
 void relmem(struct ListNode* node)
 {
+#ifndef NDEBUG
+	if(debug) printf("[DEBUG] Memory released at location %d.\n", node);
+#endif
 	if(node->next != NULL) relmem(node->next);
 	free(node);
 }
@@ -63,8 +75,12 @@ void pressenter()
 int runTM(int state)
 {
 	int i, j, thb, nh;
+		/* thb - Value of the tape head before making this move.
+		   nh  - New head location relative to the first used square. */
 	struct ListNode* nodbuf, *iter, *nhptr;
-	
+		/* nodbuf - Temporary pointer
+		   iter   - Iterator
+		   nhptr  - Pointer to new tape square */
 	for(i=1; i<=nrules; ++i)
 	{
 		if(rules[i].forstate != state) continue;
@@ -74,17 +90,24 @@ int runTM(int state)
 		nh = relhead + rules[i].direction;
 
 		if(nh < 0) /* Oops, gone out left */
-		{
+		{	   /* Expand the valid tape region and allocate
+			      memory for new tape square */
 			nodbuf = (struct ListNode*)malloc(sizeof(struct ListNode));
+#ifndef NDEBUG
+			if(debug) printf("[DEBUG] Memory allocated at location %d.\n", nodbuf);
+#endif
 			initNode(nodbuf);
 			insertNodeBef(tapehead, nodbuf, BLANK); 
-			nh = 0;
+			nh = 0; /* Adjust relative location to first used square */
 			tapestart = nodbuf;
 		}
 
 		if(nh > relhead && tapehead->next == NULL) /* Oops, gone out right */
 		{
 			nodbuf = (struct ListNode*)malloc(sizeof(struct ListNode));
+#ifndef NDEBUG
+			if(debug) printf("[DEBUG] Memory allocated at location %d.\n", nodbuf);
+#endif 
 			initNode(nodbuf);
 			insertNode(tapehead, nodbuf, BLANK);
 		}
@@ -92,7 +115,7 @@ int runTM(int state)
 		if(rules[i].direction == LEFT) nhptr = tapehead->prev;
 		else nhptr = tapehead->next;
 		
-		if(sbys)
+		if(sbys) /* Step by step mode */
 		{
 			printf("\nFor state %d and tape symbol %c, write %c, go to state %d, and move ",
 				state, thb, rules[i].totape, rules[i].tostate);
@@ -113,7 +136,7 @@ int runTM(int state)
 			pressenter();	
 		}
 
-		if(writeitout)
+		if(writeitout) /* Write to file */
 		{
 			fprintf(foutput, "%d: ", rules[i].tostate);
 
@@ -144,16 +167,16 @@ void nofiledie(char* filename)
 {
 	printf("Cannot open specified file: %s.\n", filename);
 	printf("Try dtmsim --help for more information.\n");
+	relmem(tapestart); /* Release memory occupied by the tape */
 	exit(1);
-	relmem(tapestart);
 }
 
 void badargdie()
 {
 	printf("Invalid arguments.\n");
 	printf("Try dtmsim --help for more information.\n");
+	relmem(tapestart); /* Release memory occupied by the tape */
 	exit(1);
-	relmem(tapestart);
 }
 
 void printhelp()
@@ -164,7 +187,11 @@ void printhelp()
 	printf("\tOptions:\n");
 	printf("\t\t--help or -h: Display this help message.\n");
 	printf("\t\t--step or -s: Step by step mode (Useful for instruction).\n");
-	printf("\t\t--output or -o filename: Save output to a file.\n\n");
+	printf("\t\t--output or -o filename: Save output to a file.\n");
+#ifndef NDEBUG
+	printf("\t\t--debug or -d: Display debug message.\n");
+#endif
+	printf("\n");
 	printf("\trulefile: A file representing the simulated Turing machine. See <http://dtmsim.googlecode.com/> for more information.\n");
 	printf("\tinput_tape: The input tape. Note that \'_\' (underscore) is used as the blank symbol.\n");
 	printf("\nNote: If the input tape is intended to be blank, use a single character \'_\'.\n");
@@ -179,8 +206,8 @@ void invalidstatedie(char* filename, int nthrule, int wrongstate, int correctmax
 	printf("\tRule #%d: %d is not a valid state; should be between 0 and %d.\n", nthrule, wrongstate, correctmaxstate);
 	printf("Please see <http://dtmsim.googlecode.com/> for more information.\n");
 	printf("Alternatively, you may try rulemkr, an intuitive tool for writing a rulefile.\n");
-	exit(1);
 	relmem(tapestart);
+	exit(1);
 }
 
 int eq(char* left, char* right)
@@ -188,51 +215,70 @@ int eq(char* left, char* right)
 	return !strcmp(left, right);
 }
 
-/* New function zone [nfz] */
-
 int main(int argc, char** argv)
 {
-	FILE* frule;
+	FILE* frule; /* Rule file */
 	int intbuf, i;
 	char charbuf;
 	int nstates, naccp;
-	int accp[10001];
-	int accpmrk[10001];
-	int finalstate;
+		/* nstates - Number of states
+		   naccp   - Number of accepting states */
+	int accp[10001]; /* Array of accepting states */
+	BOOL accpmrk[10001]; /* Array marking known accepting state
+			       (In order to prevent duplicates) */
+	int finalstate; /* Final state of the Turing machine */
 	char buffer[1001];
 	char* filename, *inputtape, *outputfile = malloc(10001);
-	int gotfilename = 0, gotinputtape= 0;
-	/* New Variable Zone [nvz] */
-	writeitout = 0;
+#ifndef NDEBUG
+	if(debug) printf("[DEBUG] Memory allocated at location %d.\n", outputfile);
+#endif
+		/* filename  - Name of the rule file */
+	BOOL gotfilename = FALSE, gotinputtape= FALSE;
+	BOOL accepted = FALSE;
+	struct ListNode* iter;
 
+	writeitout = FALSE;
+	sbys = FALSE;
+#ifndef NDEBUG
+	debug = FALSE;
+#endif
+
+	/* Allocate first tape square */
 	tapestart = malloc(sizeof(struct ListNode));
+#ifndef NDEBUG
+	if(debug) printf("[DEBUG] Memory allocated at location %d.\n", tapestart);
+#endif
 	initNode(tapestart);
 	tapehead = tapestart;
 
-	memset(accpmrk, 0, sizeof(accpmrk));
-	sbys = 0;
-		
+	/* Set accepting state markers to FALSE */
+	memset(accpmrk, FALSE, sizeof(accpmrk));
+
+	/* Process command line arguments */
 	for(i=1; i<argc; ++i)
 	{
 		if(eq(argv[i], "-h") || eq(argv[i], "--help")) printhelp();
-		else if(eq(argv[i], "-s") || eq(argv[i], "--help")) sbys = 1;
+		else if(eq(argv[i], "-s") || eq(argv[i], "--help")) sbys = TRUE;
 		else if(eq(argv[i], "-o") || eq(argv[i], "--output"))
 		{
 			if(i == argc-1) badargdie();
 			strcpy(outputfile, argv[++i]);
 			if(strstr(outputfile, ".tape") == NULL || !eq(strstr(outputfile, ".tape"), ".tape")) 
 				outputfile = strcat(outputfile, ".tape");
-			writeitout = 1;
+			writeitout = TRUE;
 		}
+#ifndef NDEBUG
+		else if(eq(argv[i], "-d") || eq(argv[i], "--debug")) debug = TRUE;
+#endif
 		
 		else if(!gotfilename)
 		{
-			gotfilename = 1;
+			gotfilename = TRUE;
 			filename = argv[i];
 		}
 		else if(!gotinputtape)
 		{
-			gotinputtape = 1;
+			gotinputtape = TRUE;
 			inputtape = argv[i];
 		}
 		else badargdie();
@@ -272,7 +318,7 @@ int main(int argc, char** argv)
 			exit(1);
 			relmem(tapestart);
 		}
-		accpmrk[accp[i]] = 1;	
+		accpmrk[accp[i]] = TRUE;	
 	}
 	
 	fscanf(frule, "%d", &nrules);
@@ -297,10 +343,15 @@ int main(int argc, char** argv)
 		}
 	}
 
+	/* Put input tape onto the tape */
 	tapehead->value = inputtape[0];
-	for(i=1; i<strlen(inputtape); ++i) tapehead = insertNode(tapehead, (struct ListNode*)malloc(sizeof(struct ListNode)), inputtape[i]);
-	tapehead = tapestart;
-	relhead = 0;
+	for(i=1; i<strlen(inputtape); ++i)
+	{
+		tapehead = insertNode(tapehead, (struct ListNode*)malloc(sizeof(struct ListNode)), inputtape[i]);
+#ifndef NDEBUG
+		if(debug) printf("[DEBUG] Memory allocated at location %d.\n", tapehead);
+#endif
+	}
 
 	if(writeitout)
 	{
@@ -308,19 +359,21 @@ int main(int argc, char** argv)
 		if(foutput == NULL) nofiledie(outputfile);
 	}
 
+	/* If step by step then print first step */
 	if(sbys)
 	{
-		printf("Start in state 0 and tape symbol %c.\n", tapehead->value);
-		if(tapehead != NULL)
+		iter = tapestart;
+		printf("Start in state 0 and tape symbol %c.\n", iter->value);
+		if(iter != NULL)
 		{
 			printf("H\n");
 		
-			printf("%c ", tapehead->value);
+			printf("%c ", iter->value);
 		
-			while(tapehead->next != NULL)
+			while(iter->next != NULL)
 			{
-				tapehead = tapehead->next;
-				printf("%c ", tapehead->value);
+				iter = iter->next;
+				printf("%c ", iter->value);
 			}
 		}
 
@@ -328,59 +381,67 @@ int main(int argc, char** argv)
 		pressenter();
 	}
 
-	tapehead = tapestart;
-	
+	/* If write to output file then print initial state */
 	if(writeitout)
 	{
+		iter = tapestart;
 		fprintf(foutput, "%d: ", 0);
 
-		if(tapehead != NULL)
+		if(iter != NULL)
 		{
-			fprintf(foutput, "[%c]", tapehead->value);
+			fprintf(foutput, "[%c]", iter->value);
 			
-			while(tapehead->next != NULL)
+			while(iter->next != NULL)
 			{
-				tapehead = tapehead->next;
-				fprintf(foutput, "%c", tapehead->value);
+				iter = iter->next;
+				fprintf(foutput, "%c", iter->value);
 			}
 
 			fprintf(foutput, "\n");
 		}
 	}
 
+	/* Run the Turing machine */
 	tapehead = tapestart;
-
+	relhead = 0;
 	finalstate = runTM(0);
+
+	/* Print final tape state */
 	printf("Final tape (omitting blank squares):\n");
-	
-	tapehead = tapestart;
-
-	if(tapehead != NULL)
+	iter = tapestart;
+	if(iter != NULL)
 	{
-		if(tapehead->value != BLANK) printf("%c ", tapehead->value);
+		if(iter->value != BLANK) printf("%c ", iter->value);
 
-		while(tapehead->next != NULL)
+		while(iter->next != NULL)
 		{
-			tapehead = tapehead->next;
-			if(tapehead->value != BLANK) printf("%c ", tapehead->value);
+			iter = iter->next;
+			if(iter->value != BLANK) printf("%c ", iter->value);
 		}
 	}
-
 	printf("\n");
 
+	/* Determine acceptance */
 	for(i=1; i<=naccp; ++i) 
 		if(finalstate == accp[i])
 		{
 			printf("Turing machine halted accepting the input tape (%d).\n", finalstate); 
 			if(writeitout) fprintf(foutput, "ACCEPTED\n");
-		}
-		else
-		{
-			printf("Turing machine halted NOT accepting the input tape (%d).\n", finalstate);
-			if(writeitout) fprintf(foutput, "NOT ACCEPTED\n");
+			accepted = TRUE;
+			break;
 		}
 
+	if(!accepted)
+	{
+		printf("Turing machine halted NOT accepting the input tape (%d).\n", finalstate);
+		if(writeitout) fprintf(foutput, "NOT ACCEPTED\n");
+	}
+
+	/* Clean up */
 	relmem(tapestart);
+#ifndef NDEBUG
+	if(debug) printf("[DEBUG] Memory released at location %d.\n", outputfile);
+#endif
 	free(outputfile);
 	fclose(frule);
 	if(writeitout) fclose(foutput);
