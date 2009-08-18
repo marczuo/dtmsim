@@ -7,7 +7,11 @@ There is a program to generate rulefile now. Use rulemkr [filename], and follow 
 
 Compile rulemkr with the following code:
 
- make rulemkr
+ `make rulemkr`
+
+Or:
+
+ `make all`
 
 = Introduction =
 
