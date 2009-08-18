@@ -1,0 +1,7 @@
+#summary A rule file maker for dtmsim.
+
+= Introduction =
+RuleMkr is a simple rule file maker for dtmsim.
+
+= Usage =
+See project home.
