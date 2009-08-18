@@ -3,7 +3,7 @@
 
 = Before You Read This =
 
-There is a program to generate rulefile now. Use rulemkr [filename], and follow the guidelines.
+There is a program to generate rulefile now. Use `rulemkr [filename]`, and follow the guidelines.
 
 Compile rulemkr with the following code:
 
