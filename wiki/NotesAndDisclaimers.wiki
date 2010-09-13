@@ -2,7 +2,7 @@
 
 = Notes =
 
- * The machine simulated by this program is not really a TM, since it has a finite tape. (In fact, there are only 10,000 tape squares.) However, this is sufficient for demonstration purposes, and physical limitations make it impossible to implement a true TM.
+ * The machine simulated by this program is not really a TM, since it has a finite tape. (~~In fact, there are only 10,000 tape squares.~~ The newer versions use a linked list to represent the tape, and the amount of tape squares is therefore limited only by the system's available memory.) However, this is sufficient for demonstration purposes, and physical limitations make it impossible to implement a true TM.
 
  * A real TM would have specific sets of tape alphabet and input alphabet. The machine simulated by this program does not limit any of the two, although the letter 'B' is used as blank symbol and cannot be used on the input tape.
 
