@@ -1,6 +1,6 @@
 #################################################
 # DETERMINISTIC TURING MACHINE SIMULATOR
-# COPYRIGHT (C) 2009 ZEE ZUO
+# COPYRIGHT (C) 2009 DOMUS-MARCIANA ZUO
 #################################################
 
 # Global macros

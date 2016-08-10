@@ -1,6 +1,6 @@
 /*
 	DETERMINISTIC TURING MACHINE SIMULATOR
-	COPYRIGHT (C) 2009 ZEE ZUO
+	COPYRIGHT (C) 2009 DOMUS-MARCIANA
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

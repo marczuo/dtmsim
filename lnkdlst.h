@@ -1,5 +1,5 @@
-#ifndef ZEE_LNKDLST
-#define ZEE_LNKDLST
+#ifndef DOMUS_LNKDLST
+#define DOMUS_LNKDLST
 
 struct ListNode
 {
